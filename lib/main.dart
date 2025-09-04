@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/design_system/design_system.dart';
-import 'screens/welcome_screen.dart';
+import 'core/routes/app_router.dart';
 
 void main() {
-  runApp(const CelestiaApp());
+  runApp(
+    const ProviderScope(
+      child: CelestiaApp(),
+    ),
+  );
 }
 
 class CelestiaApp extends StatelessWidget {
@@ -11,11 +16,11 @@ class CelestiaApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
       title: 'Celestia Weather',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      home: const WelcomeScreen(),
+      routerConfig: AppRouter.router,
     );
   }
 }

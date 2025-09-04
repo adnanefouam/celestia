@@ -34,6 +34,33 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
+  
+  # Routing
+  go_router: ^14.6.2
+  
+  # HTTP requests
+  dio: ^5.7.0
+  
+  # JSON annotation
+  json_annotation: ^4.9.0
+  
+  # Equatable for value equality
+  equatable: ^2.0.7
+  
+  # State management
+  flutter_riverpod: ^2.6.1
+  
+  # Flutter animate for animations
+  flutter_animate: ^4.5.0
+  
+  # Shimmer effect
+  shimmer: ^3.0.0
+  
+  # SVG support
+  flutter_svg: ^2.0.10+1
+  
+  # Vector graphics for SVG support
+  vector_graphics: ^1.1.18
 
 dev_dependencies:
   flutter_test:
@@ -49,6 +76,9 @@ dev_dependencies:
   # Flutter Gen for asset management
   flutter_gen_runner: ^5.7.0
   build_runner: ^2.4.13
+  
+  # JSON serialization
+  json_serializable: ^6.8.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -61,26 +91,19 @@ flutter:
   assets:
     - assets/images/
     - assets/icons/
+    - assets/fonts/
   
   # Fonts
   fonts:
     - family: BrittiSansVariable
       fonts:
-        - asset: assets/fonts/BrittiSansVariable-Regular.ttf
-        - asset: assets/fonts/BrittiSansVariable-Medium.ttf
+        - asset: assets/fonts/Britti-Sans-Medium.ttf
+          weight: 400
+        - asset: assets/fonts/Britti-Sans-Medium.ttf
           weight: 500
-        - asset: assets/fonts/BrittiSansVariable-SemiBold.ttf
+        - asset: assets/fonts/Britti-Sans-Medium.ttf
           weight: 600
-        - asset: assets/fonts/BrittiSansVariable-Bold.ttf
-          weight: 700
-    - family: Recoletta
-      fonts:
-        - asset: assets/fonts/Recoletta-Regular.ttf
-        - asset: assets/fonts/Recoletta-Medium.ttf
-          weight: 500
-        - asset: assets/fonts/Recoletta-SemiBold.ttf
-          weight: 600
-        - asset: assets/fonts/Recoletta-Bold.ttf
+        - asset: assets/fonts/Britti-Sans-Medium.ttf
           weight: 700
 
 # Flutter Gen Configuration
@@ -101,6 +124,4 @@ flutter_gen:
     enabled: true
     
   colors:
-    enabled: true
-    inputs:
-      - assets/colors/colors.xml
+    enabled: false

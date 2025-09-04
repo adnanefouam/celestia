@@ -5,7 +5,8 @@ class AppTypography {
   AppTypography._();
 
   static const String _primaryFontFamily = 'BrittiSansVariable';
-  static const String _displayFontFamily = 'Recoletta';
+  static const String _displayFontFamily =
+      'BrittiSansVariable'; // Fallback since Recoletta files are empty
   static const FontWeight light = FontWeight.w300;
   static const FontWeight regular = FontWeight.w400;
   static const FontWeight medium = FontWeight.w500;

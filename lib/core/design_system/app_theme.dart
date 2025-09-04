@@ -11,6 +11,7 @@ class AppTheme {
       useMaterial3: true,
       brightness: Brightness.light,
       colorScheme: _lightColorScheme,
+      fontFamily: 'BrittiSansVariable',
       textTheme: _textTheme,
       appBarTheme: _appBarTheme,
       elevatedButtonTheme: _elevatedButtonTheme,
@@ -33,6 +34,7 @@ class AppTheme {
       useMaterial3: true,
       brightness: Brightness.dark,
       colorScheme: _darkColorScheme,
+      fontFamily: 'BrittiSansVariable',
       textTheme: _textTheme.apply(
         bodyColor: Colors.white,
         displayColor: Colors.white,
@@ -108,7 +110,7 @@ class AppTheme {
       labelLarge: AppTypography.labelLarge,
       labelMedium: AppTypography.labelMedium,
       labelSmall: AppTypography.labelSmall,
-    );
+    ).apply(fontFamily: 'BrittiSansVariable');
   }
 
   static AppBarTheme get _appBarTheme {

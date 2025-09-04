@@ -1,198 +1,415 @@
+import 'package:celestia/core/design_system/app_colors.dart';
+import 'package:celestia/core/design_system/app_spacing.dart';
+import 'package:celestia/core/design_system/app_typography.dart';
+import 'package:celestia/core/providers/providers.dart';
+import 'package:celestia/gen/assets.gen.dart';
 import 'package:flutter/material.dart';
-import '../core/design_system/design_system.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shimmer/shimmer.dart';
+import 'dart:async';
 
-class WeatherScreen extends StatelessWidget {
-  const WeatherScreen({super.key});
+class WeatherScreen extends ConsumerStatefulWidget {
+  const WeatherScreen({Key? key}) : super(key: key);
+
+  @override
+  ConsumerState<WeatherScreen> createState() => _WeatherScreenState();
+}
+
+class _WeatherScreenState extends ConsumerState<WeatherScreen> {
+  final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
+  bool _isSearchFocused = false;
+  Timer? _debounceTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _searchFocusNode.addListener(() {
+      setState(() {
+        _isSearchFocused = _searchFocusNode.hasFocus;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _searchFocusNode.dispose();
+    _debounceTimer?.cancel();
+    super.dispose();
+  }
+
+  String _getGreeting() {
+    final hour = DateTime.now().hour;
+    if (hour < 12) {
+      return 'Good morning';
+    } else if (hour < 17) {
+      return 'Good afternoon';
+    } else {
+      return 'Good evening';
+    }
+  }
+
+  void _onSearchChanged(String query) {
+    if (query.trim().isEmpty) {
+      ref.read(searchProvider.notifier).clearSearch();
+      return;
+    }
+
+    _debounceTimer?.cancel();
+    _debounceTimer = Timer(const Duration(milliseconds: 500), () {
+      if (_searchController.text == query) {
+        ref.read(searchProvider.notifier).searchCities(query);
+      }
+    });
+  }
+
+  void _selectLocation(LocationWithWeather locationWithWeather) {
+    _searchController.text = locationWithWeather.location.name;
+    _searchFocusNode.unfocus();
+
+    ref.read(searchProvider.notifier).selectLocation(locationWithWeather);
+    ref.read(searchProvider.notifier).clearSearch();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: AppColors.temperatureGradient,
-        ),
-        child: SafeArea(
-          child: SingleChildScrollView(
-            padding: AppSpacing.paddingXL,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    IconButton(
-                      onPressed: () => Navigator.pop(context),
-                      icon: const Icon(
-                        Icons.arrow_back_ios,
-                        color: AppColors.backgroundPrimary,
-                      ),
-                    ),
-                    const Spacer(),
-                    IconButton(
-                      onPressed: () {},
-                      icon: const Icon(
-                        Icons.share,
-                        color: AppColors.backgroundPrimary,
-                      ),
-                    ),
-                  ],
-                ),
-                AppSpacing.gapVerticalXL,
-                Text(
-                  'Paris, France',
-                  style: AppTypography.locationTitle.copyWith(
-                    color: AppColors.backgroundPrimary,
-                  ),
-                ),
-                AppSpacing.gapVerticalXXL,
-                Row(
+    final searchState = ref.watch(searchProvider);
+    final hasResults = ref.watch(hasSearchResultsProvider);
+
+    return GestureDetector(
+      onTap: () {
+        _searchFocusNode.unfocus();
+      },
+      child: Scaffold(
+        backgroundColor: AppColors.backgroundPrimary,
+        body: SafeArea(
+          child: Column(
+            children: [
+              Container(
+                padding: AppSpacing.paddingHorizontalLG,
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      '20°',
-                      style: AppTypography.temperatureLarge.copyWith(
-                        color: AppColors.backgroundPrimary,
-                      ),
-                    ),
-                    AppSpacing.gapHorizontalLG,
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    AppSpacing.gapVerticalXXXL,
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        Icon(
-                          Icons.wb_cloudy,
-                          size: 48,
-                          color: AppColors.backgroundPrimary,
-                        ),
-                        AppSpacing.gapVerticalSM,
-                        Text(
-                          'Partly Cloudy',
-                          style: AppTypography.weatherCondition.copyWith(
-                            color: AppColors.backgroundPrimary.withOpacity(0.9),
+                        Flexible(
+                          flex: 2,
+                          child: Text(
+                            _getGreeting(),
+                            style: AppTypography.displaySmall,
                           ),
                         ),
-                        Text(
-                          'H:29° L:15°',
-                          style: AppTypography.weatherDetail.copyWith(
-                            color: AppColors.backgroundPrimary.withOpacity(0.8),
+                        Flexible(
+                          child: Assets.icons.celestiaLogo.svg(
+                            width: 30,
+                            height: 30,
                           ),
                         ),
                       ],
                     ),
-                  ],
-                ),
-                AppSpacing.gapVerticalXXXL,
-                Container(
-                  width: double.infinity,
-                  padding: AppSpacing.paddingLG,
-                  decoration: BoxDecoration(
-                    color: AppColors.backgroundPrimary.withOpacity(0.2),
-                    borderRadius: AppRadius.radiusLG,
-                  ),
-                  child: Text(
-                    'Cloudy conditions from 1AM-9AM, with showers expected at 9AM.',
-                    style: AppTypography.bodyMedium.copyWith(
-                      color: AppColors.backgroundPrimary,
-                    ),
-                  ),
-                ),
-                AppSpacing.gapVerticalXXL,
-                Text(
-                  'Hourly Forecast',
-                  style: AppTypography.titleLarge.copyWith(
-                    color: AppColors.backgroundPrimary,
-                  ),
-                ),
-                AppSpacing.gapVerticalLG,
-                SizedBox(
-                  height: 120,
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: 5,
-                    itemBuilder: (context, index) {
-                      final times = ['Now', '10PM', '11PM', '12AM', '1AM'];
-                      final temps = ['21°', '21°', '19°', '19°', '19°'];
-                      final icons = [
-                        Icons.wb_cloudy_outlined,
-                        Icons.grain,
-                        Icons.grain,
-                        Icons.thunderstorm,
-                        Icons.grain,
-                      ];
-
-                      return Container(
-                        width: 60,
-                        margin: const EdgeInsets.only(right: AppSpacing.lg),
-                        child: Column(
+                    AppSpacing.gapVerticalXXL,
+                    GestureDetector(
+                      onTap: () {
+                        _searchFocusNode.requestFocus();
+                      },
+                      child: Container(
+                        width: double.infinity,
+                        padding: EdgeInsets.only(
+                          top: AppSpacing.sm + AppSpacing.xs,
+                          left: AppSpacing.md + AppSpacing.xs,
+                          right: AppSpacing.sm + AppSpacing.xs,
+                          bottom: AppSpacing.sm + AppSpacing.xs,
+                        ),
+                        clipBehavior: Clip.antiAlias,
+                        decoration: ShapeDecoration(
+                          color: const Color(0xFFFAF9F7),
+                          shape: RoundedRectangleBorder(
+                            side: BorderSide(
+                              width: 1,
+                              color: _isSearchFocused
+                                  ? AppColors.primaryOrange
+                                  : const Color(0xFFE0DFDE),
+                            ),
+                            borderRadius: BorderRadius.circular(30.80),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            Text(
-                              times[index],
-                              style: AppTypography.labelMedium.copyWith(
-                                color: AppColors.backgroundPrimary
-                                    .withOpacity(0.8),
+                            Container(
+                              width: 30.47,
+                              height: 30.47,
+                              clipBehavior: Clip.antiAlias,
+                              decoration: const BoxDecoration(),
+                              child: Assets.icons.searchIcon.svg(
+                                width: 30.47,
+                                height: 30.47,
+                                colorFilter: ColorFilter.mode(
+                                  _isSearchFocused
+                                      ? AppColors.primaryOrange
+                                      : AppColors.stormColor,
+                                  BlendMode.srcIn,
+                                ),
                               ),
                             ),
-                            AppSpacing.gapVerticalMD,
-                            Icon(
-                              icons[index],
-                              color: AppColors.backgroundPrimary,
-                              size: 24,
-                            ),
-                            AppSpacing.gapVerticalMD,
-                            Text(
-                              temps[index],
-                              style: AppTypography.labelLarge.copyWith(
-                                color: AppColors.backgroundPrimary,
-                                fontWeight: FontWeight.w600,
+                            SizedBox(width: 8.80),
+                            Expanded(
+                              child: TextField(
+                                controller: _searchController,
+                                focusNode: _searchFocusNode,
+                                onChanged: _onSearchChanged,
+                                style: AppTypography.bodyMedium.copyWith(
+                                  color: AppColors.textPrimary,
+                                  fontSize: 14,
+                                  fontWeight: AppTypography.medium,
+                                  height: 1.21,
+                                  letterSpacing: -0.08,
+                                ),
+                                decoration: InputDecoration(
+                                  hintText: 'Search for city or airport',
+                                  hintStyle: AppTypography.bodyMedium.copyWith(
+                                    color: const Color(0xFF76807B),
+                                    fontSize: 14,
+                                    fontWeight: AppTypography.medium,
+                                    height: 1.21,
+                                    letterSpacing: -0.08,
+                                  ),
+                                  border: InputBorder.none,
+                                  enabledBorder: InputBorder.none,
+                                  focusedBorder: InputBorder.none,
+                                  errorBorder: InputBorder.none,
+                                  disabledBorder: InputBorder.none,
+                                  contentPadding: EdgeInsets.zero,
+                                  isDense: true,
+                                ),
                               ),
                             ),
                           ],
                         ),
-                      );
-                    },
-                  ),
-                ),
-                AppSpacing.gapVerticalXXL,
-                Container(
-                  padding: AppSpacing.paddingXL,
-                  decoration: BoxDecoration(
-                    color: AppColors.backgroundPrimary.withOpacity(0.2),
-                    borderRadius: AppRadius.radiusLG,
-                  ),
-                  child: Column(
-                    children: [
-                      Text(
-                        'Temperature increase by',
-                        style: AppTypography.bodyMedium.copyWith(
-                          color: AppColors.backgroundPrimary.withOpacity(0.8),
-                        ),
                       ),
-                      AppSpacing.gapVerticalSM,
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.baseline,
-                        textBaseline: TextBaseline.alphabetic,
-                        children: [
-                          Text(
-                            '32%',
-                            style: AppTypography.displayMedium.copyWith(
-                              color: AppColors.backgroundPrimary,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          AppSpacing.gapHorizontalSM,
-                          Text(
-                            '+0,4%',
-                            style: AppTypography.bodyLarge.copyWith(
-                              color: AppColors.success,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
+                    ),
+                    AppSpacing.gapVerticalLG,
+                  ],
                 ),
-              ],
+              ),
+              Expanded(
+                child: searchState.isLoading
+                    ? _buildShimmerList()
+                    : hasResults
+                        ? _buildSearchResults(searchState.results)
+                        : _buildMainContent(),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSearchResults(List<LocationWithWeather> results) {
+    return ListView(
+      padding: AppSpacing.paddingHorizontalXL,
+      children: [
+        ...results.asMap().entries.map((entry) {
+          final index = entry.key;
+          final result = entry.value;
+          return Container(
+            margin: EdgeInsets.only(
+              bottom: index < results.length - 1 ? AppSpacing.md : 0,
+            ),
+            child: _buildSearchResultItem(result),
+          );
+        }),
+      ],
+    );
+  }
+
+  Widget _buildShimmerList() {
+    return ListView(
+      padding: AppSpacing.paddingHorizontalXL,
+      children: List.generate(5, (index) {
+        return Container(
+          margin: EdgeInsets.only(
+            bottom: index < 4 ? AppSpacing.md : 0,
+          ),
+          child: _buildShimmerItem(),
+        );
+      }),
+    );
+  }
+
+  Widget _buildShimmerItem() {
+    return Shimmer.fromColors(
+      baseColor: Colors.grey[300]!,
+      highlightColor: Colors.grey[100]!,
+      child: Container(
+        width: double.infinity,
+        padding: EdgeInsets.symmetric(
+          horizontal: AppSpacing.sm,
+          vertical: AppSpacing.xs,
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    height: 20,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                  SizedBox(height: 4),
+                  Container(
+                    height: 16,
+                    width: 120,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(width: AppSpacing.sm),
+            Container(
+              width: 25,
+              height: 25,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSearchResultItem(LocationWithWeather result) {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: AppSpacing.xs,
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Expanded(
+            child: Text(
+              '${result.location.name}, ${result.location.country}',
+              style: AppTypography.bodyLarge.copyWith(
+                color: const Color(0xFF030003),
+                fontSize: 20.14,
+                fontWeight: FontWeight.w500,
+                height: 1.21,
+                letterSpacing: -0.12,
+              ),
+              overflow: TextOverflow.ellipsis,
             ),
           ),
+          SizedBox(width: AppSpacing.sm),
+          InkWell(
+            onTap: () => _selectLocation(result),
+            borderRadius: BorderRadius.circular(12),
+            child: Assets.icons.arrowUp.svg(
+              width: 25,
+              height: 25,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMainContent() {
+    final screenSize = MediaQuery.of(context).size;
+
+    return SingleChildScrollView(
+      padding: AppSpacing.paddingHorizontalLG,
+      child: SizedBox(
+        height: MediaQuery.of(context).size.height * 0.6,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Center(
+              child: Assets.images.allowLocationImage.image(width: 300),
+            ),
+            AppSpacing.gapVerticalXXXL,
+            Container(
+              width: double.infinity,
+              padding: AppSpacing.paddingHorizontalSM,
+              child: Text(
+                'Allow current location to show the actual weather, or try the search button above',
+                textAlign: TextAlign.center,
+                style: AppTypography.headlineSmall.copyWith(
+                  color: AppColors.textSecondary,
+                  height: 1.3,
+                ),
+              ),
+            ),
+            AppSpacing.gapVerticalXL,
+            Center(
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: AppRadius.radiusCircular,
+                  onTap: () {
+                    print('Allow current location tapped');
+                  },
+                  child: Container(
+                    width: screenSize.width * 0.55,
+                    height: screenSize.height * 0.05,
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryOrange,
+                      border: Border.all(
+                        color: AppColors.primaryOrangeDark.withOpacity(0.3),
+                        width: 1.02,
+                      ),
+                      borderRadius: AppRadius.radiusCircular,
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.primaryOrange,
+                          offset: const Offset(0, 0),
+                          blurRadius: 0,
+                          spreadRadius: 1.02,
+                        ),
+                        BoxShadow(
+                          color: AppColors.primaryOrangeDark.withOpacity(0.1),
+                          offset: const Offset(0, 1.02),
+                          blurRadius: 2.05,
+                          spreadRadius: 0,
+                        ),
+                      ],
+                    ),
+                    child: Center(
+                      child: Text(
+                        'Allow current location',
+                        style: AppTypography.buttonMedium.copyWith(
+                          color: AppColors.backgroundPrimary,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

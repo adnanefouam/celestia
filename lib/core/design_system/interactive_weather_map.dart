@@ -34,6 +34,10 @@ class _InteractiveWeatherMapState extends State<InteractiveWeatherMap>
   late final MapController _mapController;
   late AnimationController _markerAnimationController;
   late Animation<double> _markerScaleAnimation;
+  late AnimationController _tapAnimationController;
+  late Animation<double> _tapScaleAnimation;
+  late AnimationController _zoomAnimationController;
+  late Animation<double> _zoomAnimation;
 
   String _selectedLayer = 'precipitation'; // temperature, precipitation, wind
 
@@ -56,6 +60,42 @@ class _InteractiveWeatherMapState extends State<InteractiveWeatherMap>
       curve: Curves.elasticOut,
     ));
 
+    // Initialize tap animation
+    _tapAnimationController = AnimationController(
+      duration: const Duration(milliseconds: 200),
+      vsync: this,
+    );
+
+    _tapScaleAnimation = Tween<double>(
+      begin: 1.0,
+      end: 1.2,
+    ).animate(CurvedAnimation(
+      parent: _tapAnimationController,
+      curve: Curves.easeInOut,
+    ));
+
+    // Initialize zoom animation
+    _zoomAnimationController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
+
+    _zoomAnimation = Tween<double>(
+      begin: 6.0,
+      end: 12.0,
+    ).animate(CurvedAnimation(
+      parent: _zoomAnimationController,
+      curve: Curves.easeInOut,
+    ));
+
+    // Listen to zoom animation changes
+    _zoomAnimation.addListener(() {
+      _mapController.move(
+        LatLng(widget.centerLocation.lat, widget.centerLocation.lon),
+        _zoomAnimation.value,
+      );
+    });
+
     // Auto-zoom to the city location and animate marker once
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _autoZoomToCity();
@@ -66,6 +106,8 @@ class _InteractiveWeatherMapState extends State<InteractiveWeatherMap>
   @override
   void dispose() {
     _markerAnimationController.dispose();
+    _tapAnimationController.dispose();
+    _zoomAnimationController.dispose();
     super.dispose();
   }
 
@@ -74,6 +116,21 @@ class _InteractiveWeatherMapState extends State<InteractiveWeatherMap>
       LatLng(widget.centerLocation.lat, widget.centerLocation.lon),
       6.0, // Zoom level for country view
     );
+  }
+
+  void _animateMarkerTap() {
+    // Animate the marker tap effect
+    _tapAnimationController.forward().then((_) {
+      _tapAnimationController.reverse();
+    });
+  }
+
+  void _zoomToMainMarker() {
+    // Animate the marker tap effect
+    _animateMarkerTap();
+
+    // Start animated zoom
+    _zoomAnimationController.forward();
   }
 
   @override
@@ -432,14 +489,20 @@ class _InteractiveWeatherMapState extends State<InteractiveWeatherMap>
           point: LatLng(widget.centerLocation.lat, widget.centerLocation.lon),
           width: 110,
           height: 110,
-          child: AnimatedBuilder(
-            animation: _markerAnimationController,
-            builder: (context, child) {
-              return Transform.scale(
-                scale: _markerScaleAnimation.value,
-                child: _buildAnimatedWeatherMarker(widget.currentWeather!),
-              );
+          child: GestureDetector(
+            onTap: () {
+              _zoomToMainMarker();
             },
+            child: AnimatedBuilder(
+              animation: Listenable.merge(
+                  [_markerAnimationController, _tapAnimationController]),
+              builder: (context, child) {
+                return Transform.scale(
+                  scale: _markerScaleAnimation.value * _tapScaleAnimation.value,
+                  child: _buildAnimatedWeatherMarker(widget.currentWeather!),
+                );
+              },
+            ),
           ),
         ),
       );
@@ -459,7 +522,12 @@ class _InteractiveWeatherMapState extends State<InteractiveWeatherMap>
           point: LatLng(city['lat'], city['lon']),
           width: 60,
           height: 60,
-          child: _buildStaticWeatherMarker(city),
+          child: GestureDetector(
+            onTap: () {
+              _animateMarkerTap();
+            },
+            child: _buildStaticWeatherMarker(city),
+          ),
         ),
       );
     }

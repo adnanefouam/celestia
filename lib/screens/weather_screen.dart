@@ -3,6 +3,10 @@ import 'package:celestia/core/design_system/app_spacing.dart';
 import 'package:celestia/core/design_system/app_typography.dart';
 import 'package:celestia/core/providers/providers.dart';
 import 'package:celestia/core/providers/saved_cities_provider.dart';
+import 'package:celestia/core/services/location_service.dart';
+import 'package:celestia/core/services/saved_weather_service.dart';
+import 'package:celestia/core/api/weather_service.dart';
+import 'package:celestia/core/api/api_response.dart';
 import 'package:celestia/core/models/location.dart';
 import 'package:celestia/core/models/weather_data.dart';
 import 'package:celestia/gen/assets.gen.dart';
@@ -23,6 +27,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
   bool _isSearchFocused = false;
+  bool _isGettingLocation = false;
   Timer? _debounceTimer;
 
   @override
@@ -86,6 +91,84 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
     context.pushNamed(
       'weather-details',
       extra: locationWithWeather,
+    );
+  }
+
+  Future<void> _getCurrentLocationAndNavigate() async {
+    setState(() {
+      _isGettingLocation = true;
+    });
+
+    try {
+      // Get current location
+      final position = await LocationService.getCurrentLocation();
+
+      if (position == null) {
+        _showLocationError(
+            'Unable to get your current location. Please check your location settings.');
+        return;
+      }
+
+      // Get weather data for current location
+      final response =
+          await WeatherService.instance.getCurrentWeatherByCoordinates(
+        lat: position.latitude,
+        lon: position.longitude,
+      );
+
+      if (response is ApiSuccess && response.data != null) {
+        // Create location object
+        final location = Location(
+          name: response.data!.location.name.isNotEmpty
+              ? response.data!.location.name
+              : 'Current Location',
+          country: response.data!.location.country ?? '',
+          lat: position.latitude,
+          lon: position.longitude,
+        );
+
+        // Save current location as favorite
+        await SavedWeatherService.saveWeatherCity(location);
+
+        // Notify the saved cities provider to refresh
+        ref.read(savedCitiesProvider.notifier).addSavedCity({
+          'name': location.name,
+          'country': location.country,
+          'lat': location.lat,
+          'lon': location.lon,
+        });
+
+        // Create LocationWithWeather object
+        final locationWithWeather = LocationWithWeather(
+          location: location,
+          weather: response.data,
+          isLoadingWeather: false,
+        );
+
+        // Navigate to weather details
+        context.pushNamed(
+          'weather-details',
+          extra: locationWithWeather,
+        );
+      } else {
+        _showLocationError('Unable to get weather data for your location.');
+      }
+    } catch (e) {
+      _showLocationError('Error getting your location: ${e.toString()}');
+    } finally {
+      setState(() {
+        _isGettingLocation = false;
+      });
+    }
+  }
+
+  void _showLocationError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+        duration: Duration(seconds: 3),
+      ),
     );
   }
 
@@ -478,14 +561,16 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
                 color: Colors.transparent,
                 child: InkWell(
                   borderRadius: AppRadius.radiusCircular,
-                  onTap: () {
-                    print('Allow current location tapped');
-                  },
+                  onTap: _isGettingLocation
+                      ? null
+                      : _getCurrentLocationAndNavigate,
                   child: Container(
                     width: screenSize.width * 0.55,
                     height: screenSize.height * 0.05,
                     decoration: BoxDecoration(
-                      color: AppColors.primaryOrange,
+                      color: _isGettingLocation
+                          ? AppColors.primaryOrange.withOpacity(0.7)
+                          : AppColors.primaryOrange,
                       border: Border.all(
                         color: AppColors.primaryOrangeDark.withOpacity(0.3),
                         width: 1.02,
@@ -507,12 +592,35 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
                       ],
                     ),
                     child: Center(
-                      child: Text(
-                        'Allow current location',
-                        style: AppTypography.buttonMedium.copyWith(
-                          color: AppColors.backgroundPrimary,
-                        ),
-                      ),
+                      child: _isGettingLocation
+                          ? Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      AppColors.backgroundPrimary,
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(width: 8),
+                                Text(
+                                  'Getting location...',
+                                  style: AppTypography.buttonMedium.copyWith(
+                                    color: AppColors.backgroundPrimary,
+                                  ),
+                                ),
+                              ],
+                            )
+                          : Text(
+                              'Allow current location',
+                              style: AppTypography.buttonMedium.copyWith(
+                                color: AppColors.backgroundPrimary,
+                              ),
+                            ),
                     ),
                   ),
                 ),
@@ -603,7 +711,6 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
         },
         child: Container(
           height: 140,
-          margin: EdgeInsets.only(bottom: 16),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
@@ -660,8 +767,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
                                     : '--°',
                                 style: TextStyle(
                                   color: Colors.white,
-                                  fontSize: 36,
-                                  fontWeight: FontWeight.w700,
+                                  fontSize: 42,
                                 ),
                               ),
                             ],

@@ -68,9 +68,12 @@ dependencies:
   
   # Maps
   flutter_map: ^7.0.2
-  flutter_map_heatmap: ^0.0.8
   latlong2: ^0.9.1
   shared_preferences: ^2.5.3
+  
+  # Location services
+  geolocator: ^13.0.1
+  permission_handler: ^11.3.1
 
 dev_dependencies:
   flutter_test:

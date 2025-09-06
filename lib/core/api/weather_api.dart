@@ -69,6 +69,45 @@ class WeatherApi {
     );
   }
 
+  Future<ApiResponse<ForecastData>> get5DayForecast({
+    required double lat,
+    required double lon,
+    String units = ApiQueryParams.unitsMetric,
+    String lang = ApiQueryParams.langEnglish,
+  }) async {
+    final response = await _httpClient.get<Map<String, dynamic>>(
+      ApiEndpoints.forecast5Day,
+      queryParameters: {
+        ApiQueryParams.lat: lat,
+        ApiQueryParams.lon: lon,
+        ApiQueryParams.units: units,
+        ApiQueryParams.lang: lang,
+      },
+    );
+
+    return response.fold(
+      (message, statusCode) => ApiError(
+        message: message,
+        statusCode: statusCode,
+      ),
+      (data) {
+        try {
+          final forecastData = ForecastData.fromJson(data);
+          return ApiSuccess(
+            data: forecastData,
+            statusCode: response.statusCode,
+          );
+        } catch (e, stackTrace) {
+          return ApiError(
+            message: 'Failed to parse forecast data: $e',
+            originalError: e,
+            stackTrace: stackTrace,
+          );
+        }
+      },
+    );
+  }
+
   Future<ApiResponse<ForecastData>> getOneCallWeather({
     required double lat,
     required double lon,

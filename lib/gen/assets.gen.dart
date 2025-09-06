@@ -93,6 +93,8 @@ class $AssetsImagesGen {
   AssetGenImage get allowLocationImage =>
       const AssetGenImage('assets/images/allow-location-image.png');
 
+  AssetGenImage get nocity => const AssetGenImage('assets/images/no-city.png');
+
   /// File path: assets/images/city1.png
   AssetGenImage get city1 => const AssetGenImage('assets/images/city1.png');
 
@@ -114,7 +116,7 @@ class $AssetsImagesGen {
 
   /// List of all assets
   List<AssetGenImage> get values =>
-      [allowLocationImage, city1, city2, city3, city4, city5, firstScreenImage];
+      [allowLocationImage, city1, city2, city3, city4, city5, firstScreenImage,nocity];
 }
 
 class Assets {

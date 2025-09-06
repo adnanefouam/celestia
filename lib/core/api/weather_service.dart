@@ -73,7 +73,7 @@ class WeatherService {
     );
   }
 
-  // Forecast methods
+  // Forecast methods - using free 5-day forecast API
   Future<ApiResponse<ForecastData>> getDetailedForecast({
     required double lat,
     required double lon,
@@ -81,12 +81,11 @@ class WeatherService {
     String lang = ApiQueryParams.langEnglish,
     List<String> exclude = const [],
   }) {
-    return _weatherApi.getOneCallWeather(
+    return _weatherApi.get5DayForecast(
       lat: lat,
       lon: lon,
       units: units,
       lang: lang,
-      exclude: exclude,
     );
   }
 
@@ -96,16 +95,11 @@ class WeatherService {
     String units = ApiQueryParams.unitsMetric,
     String lang = ApiQueryParams.langEnglish,
   }) {
-    return getDetailedForecast(
+    return _weatherApi.get5DayForecast(
       lat: lat,
       lon: lon,
       units: units,
       lang: lang,
-      exclude: [
-        ApiQueryParams.excludeDaily,
-        ApiQueryParams.excludeMinutely,
-        ApiQueryParams.excludeAlerts,
-      ],
     );
   }
 
@@ -115,16 +109,11 @@ class WeatherService {
     String units = ApiQueryParams.unitsMetric,
     String lang = ApiQueryParams.langEnglish,
   }) {
-    return getDetailedForecast(
+    return _weatherApi.get5DayForecast(
       lat: lat,
       lon: lon,
       units: units,
       lang: lang,
-      exclude: [
-        ApiQueryParams.excludeHourly,
-        ApiQueryParams.excludeMinutely,
-        ApiQueryParams.excludeAlerts,
-      ],
     );
   }
 

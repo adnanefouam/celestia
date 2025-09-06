@@ -3,6 +3,28 @@
 ## 🌤️ Project Overview
 
 **Celestia** is a modern, intuitive weather application designed to provide accurate, real-time weather insights with a focus on user experience and visual appeal. The app combines beautiful design with powerful functionality to deliver weather information that keeps users ahead of the storm.
+## 📸 App Screenshots
+
+<div style="display: flex; flex-wrap: wrap; justify-content: flex-start; gap: 15px;">
+
+  <img src="https://github.com/user-attachments/assets/0d298a81-8ed8-4a7c-ad0b-56ca921e0cf2" width="23%" />
+  <img src="https://github.com/user-attachments/assets/72602510-e67d-4129-a8fb-974b79778f7c" width="23%" />
+  <img src="https://github.com/user-attachments/assets/37b3fef4-8699-4cbe-8dae-bd4b45c4c5ac" width="23%" />
+  <img src="https://github.com/user-attachments/assets/d10defcd-1a23-4f7d-bb1d-beb0d62a9514" width="23%" />
+
+  <img src="https://github.com/user-attachments/assets/f0e44c89-c06e-4716-96ae-099bcc7ebe45" width="23%" />
+  <img src="https://github.com/user-attachments/assets/c9c41f51-5f6b-460e-800a-a5b9a44581df" width="23%" />
+  <img src="https://github.com/user-attachments/assets/701496af-a9c5-4d7f-a097-5f4be2e3a08c" width="23%" />
+  <img src="https://github.com/user-attachments/assets/d021cc74-4e22-4684-978f-602c5d875659" width="23%" />
+
+  <img src="https://github.com/user-attachments/assets/eb9026c5-4793-429f-8802-7ed0102559d6" width="23%" />
+  <img src="https://github.com/user-attachments/assets/23e028f5-be8a-452f-97b3-79741b6e0f01" width="23%" />
+
+</div>
+
+---
+
+*Designed & developed with ❤️ by @Fouham Adnane*
 
 ## 🎯 Project Goals
 
@@ -143,25 +165,4 @@ The app dynamically displays weather backgrounds based on each city's actual loc
 - **Real-Time Updates**: Reactive state management ensures UI consistency
 - **Performance**: Optimized loading states and efficient data handling
 
-## 📸 App Screenshots
 
-<div align="center" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;">
-
-  <img src="https://github.com/user-attachments/assets/0d298a81-8ed8-4a7c-ad0b-56ca921e0cf2" width="23%" />
-  <img src="https://github.com/user-attachments/assets/72602510-e67d-4129-a8fb-974b79778f7c" width="23%" />
-  <img src="https://github.com/user-attachments/assets/37b3fef4-8699-4cbe-8dae-bd4b45c4c5ac" width="23%" />
-  <img src="https://github.com/user-attachments/assets/d10defcd-1a23-4f7d-bb1d-beb0d62a9514" width="23%" />
-
-  <img src="https://github.com/user-attachments/assets/f0e44c89-c06e-4716-96ae-099bcc7ebe45" width="23%" />
-  <img src="https://github.com/user-attachments/assets/c9c41f51-5f6b-460e-800a-a5b9a44581df" width="23%" />
-  <img src="https://github.com/user-attachments/assets/701496af-a9c5-4d7f-a097-5f4be2e3a08c" width="23%" />
-  <img src="https://github.com/user-attachments/assets/d021cc74-4e22-4684-978f-602c5d875659" width="23%" />
-
-  <img src="https://github.com/user-attachments/assets/eb9026c5-4793-429f-8802-7ed0102559d6" width="23%" />
-  <img src="https://github.com/user-attachments/assets/23e028f5-be8a-452f-97b3-79741b6e0f01" width="23%" />
-
-</div>
-
----
-
-*Designed & developed with ❤️ by @Fouham Adnane*

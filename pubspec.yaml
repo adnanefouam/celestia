@@ -70,6 +70,7 @@ dependencies:
   flutter_map: ^7.0.2
   flutter_map_heatmap: ^0.0.8
   latlong2: ^0.9.1
+  shared_preferences: ^2.5.3
 
 dev_dependencies:
   flutter_test:
@@ -99,6 +100,8 @@ flutter:
   # Assets
   assets:
     - assets/images/
+    - assets/images/icons-weather/
+    - assets/images/savedwether/
     - assets/icons/
     - assets/fonts/
   

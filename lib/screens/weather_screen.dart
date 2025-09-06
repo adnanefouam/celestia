@@ -2,6 +2,9 @@ import 'package:celestia/core/design_system/app_colors.dart';
 import 'package:celestia/core/design_system/app_spacing.dart';
 import 'package:celestia/core/design_system/app_typography.dart';
 import 'package:celestia/core/providers/providers.dart';
+import 'package:celestia/core/providers/saved_cities_provider.dart';
+import 'package:celestia/core/models/location.dart';
+import 'package:celestia/core/models/weather_data.dart';
 import 'package:celestia/gen/assets.gen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -412,7 +415,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Assets.images.city1.image(width: 150),
+            Assets.images.noCity.image(width: 150),
             SizedBox(height: AppSpacing.lg),
             Text(
               'No cities found...',
@@ -436,6 +439,13 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
   }
 
   Widget _buildMainContent() {
+    final savedCitiesState = ref.watch(savedCitiesProvider);
+
+    // Show saved cities if available
+    if (savedCitiesState.cities.isNotEmpty) {
+      return _buildSavedCitiesList();
+    }
+
     final screenSize = MediaQuery.of(context).size;
 
     return SingleChildScrollView(
@@ -509,6 +519,347 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSavedCitiesList() {
+    final savedCitiesState = ref.watch(savedCitiesProvider);
+
+    return ListView(
+      padding: AppSpacing.paddingHorizontalLG,
+      children: [
+        SizedBox(height: AppSpacing.md),
+        Text(
+          'Saved Cities',
+          style: AppTypography.bodyMedium.copyWith(
+            color: AppColors.textPrimary,
+          ),
+        ),
+        SizedBox(height: AppSpacing.lg),
+        if (savedCitiesState.isLoading)
+          ...List.generate(
+              3,
+              (index) => Container(
+                    margin: EdgeInsets.only(bottom: AppSpacing.md),
+                    child: _buildShimmerCard(),
+                  ))
+        else
+          ...savedCitiesState.cities.entries.map((entry) {
+            final cityData = entry.value;
+            final savedAt = cityData['savedAt'];
+            final weather = savedCitiesState.weatherData[entry.key];
+
+            return Container(
+              margin: EdgeInsets.only(bottom: AppSpacing.md),
+              child: _buildDismissibleCityCard(
+                  entry.key, cityData, savedAt, weather),
+            );
+          }).toList(),
+      ],
+    );
+  }
+
+  Widget _buildSavedCityCard(
+      Map<String, dynamic> cityData, int savedAt, WeatherData? weather) {
+    // Calculate the actual time for this specific city
+    final cityHour = _getCityHour(
+        cityData['lat']?.toDouble() ?? 0.0, cityData['lon']?.toDouble() ?? 0.0);
+
+    // Determine time of day and background based on city's actual time
+    String timeOfDay;
+    String condition;
+
+    if (cityHour >= 6 && cityHour < 12) {
+      timeOfDay = 'Morning';
+      condition = weather?.description ?? 'Mostly clear';
+    } else if (cityHour >= 12 && cityHour < 18) {
+      timeOfDay = 'Noon';
+      condition = weather?.description ?? 'Partly cloudy';
+    } else {
+      timeOfDay = 'Night';
+      condition = weather?.description ?? 'Clear sky';
+    }
+
+    return GestureDetector(
+        onTap: () {
+          // Navigate to weather details for this saved city
+          final location = Location(
+            name: cityData['name'] ?? '',
+            country: cityData['country'] ?? '',
+            lat: cityData['lat']?.toDouble() ?? 0.0,
+            lon: cityData['lon']?.toDouble() ?? 0.0,
+          );
+
+          // Create a LocationWithWeather with current weather data
+          final locationWithWeather = LocationWithWeather(
+            location: location,
+            weather: weather,
+            isLoadingWeather: false,
+          );
+
+          context.push('/weather-details', extra: locationWithWeather);
+        },
+        child: Container(
+          height: 140,
+          margin: EdgeInsets.only(bottom: 16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 10,
+                offset: Offset(0, 4),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: Container(
+              child: Stack(
+                children: [
+                  // Background
+                  Container(
+                    width: double.infinity,
+                    height: double.infinity,
+                    child: _getTimeBasedBackgroundImage(timeOfDay),
+                  ),
+
+                  // Content overlay
+                  Container(
+                    width: double.infinity,
+                    height: double.infinity,
+                    child: Padding(
+                      padding: EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          // Top - City name and temperature
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Left side - City and country name
+                              Expanded(
+                                child: Text(
+                                  '${cityData['name']}, ${cityData['country']}',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+
+                              // Right side - Temperature
+                              Text(
+                                weather != null
+                                    ? '${weather.currentTemp.round()}°'
+                                    : '--°',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 36,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          // Bottom - Weather condition
+                          Text(
+                            condition,
+                            style: TextStyle(
+                              color: Colors.white.withOpacity(0.9),
+                              fontSize: 16,
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ));
+  }
+
+  int _getCityHour(double lat, double lon) {
+    // Calculate timezone offset based on longitude
+    // Each 15 degrees of longitude represents 1 hour difference
+    final timezoneOffset = (lon / 15.0).round();
+
+    // Get current UTC time
+    final utcNow = DateTime.now().toUtc();
+
+    // Calculate the city's local time
+    final cityTime = utcNow.add(Duration(hours: timezoneOffset));
+
+    return cityTime.hour;
+  }
+
+  Widget _getTimeBasedBackgroundImage(String timeOfDay) {
+    switch (timeOfDay) {
+      case 'Morning':
+        return Assets.images.savedwether.morning.image(
+          width: double.infinity,
+          height: double.infinity,
+          fit: BoxFit.cover,
+        );
+      case 'Noon':
+        return Assets.images.savedwether.noon.image(
+          width: double.infinity,
+          height: double.infinity,
+          fit: BoxFit.cover,
+        );
+      case 'Night':
+        return Assets.images.savedwether.night.image(
+          width: double.infinity,
+          height: double.infinity,
+          fit: BoxFit.cover,
+        );
+      default:
+        return Assets.images.savedwether.morning.image(
+          width: double.infinity,
+          height: double.infinity,
+          fit: BoxFit.cover,
+        );
+    }
+  }
+
+  Widget _buildDismissibleCityCard(String cityKey,
+      Map<String, dynamic> cityData, int savedAt, WeatherData? weather) {
+    return Dismissible(
+      key: Key(cityKey),
+      direction: DismissDirection.endToStart,
+      background: Container(
+        alignment: Alignment.centerRight,
+        padding: EdgeInsets.only(right: 20),
+        decoration: BoxDecoration(
+          color: Colors.red,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Icon(
+          Icons.delete,
+          color: Colors.white,
+          size: 30,
+        ),
+      ),
+      confirmDismiss: (direction) async {
+        return await _showDeleteConfirmationDialog(cityData['name'] ?? 'City');
+      },
+      onDismissed: (direction) async {
+        await _deleteSavedCity(cityKey);
+      },
+      child: _buildSavedCityCard(cityData, savedAt, weather),
+    );
+  }
+
+  Future<bool> _showDeleteConfirmationDialog(String cityName) async {
+    return await showDialog<bool>(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Text('Delete City'),
+              content: Text(
+                  'Are you sure you want to delete $cityName from your saved cities?'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  style: TextButton.styleFrom(foregroundColor: Colors.red),
+                  child: Text('Delete'),
+                ),
+              ],
+            );
+          },
+        ) ??
+        false;
+  }
+
+  Future<void> _deleteSavedCity(String cityKey) async {
+    try {
+      await ref.read(savedCitiesProvider.notifier).removeSavedCity(cityKey);
+
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('City removed from saved cities'),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 2),
+        ),
+      );
+    } catch (e) {
+      // Show error message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to delete city'),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
+  Widget _buildShimmerCard() {
+    return Shimmer.fromColors(
+      baseColor: Colors.grey[300]!,
+      highlightColor: Colors.grey[100]!,
+      child: Container(
+        height: 140,
+        margin: EdgeInsets.only(bottom: 16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Padding(
+          padding: EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // Top row shimmer
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // City name shimmer
+                  Container(
+                    height: 20,
+                    width: 150,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                  // Temperature shimmer
+                  Container(
+                    height: 36,
+                    width: 60,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                ],
+              ),
+              // Bottom weather condition shimmer
+              Container(
+                height: 16,
+                width: 120,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -1,7 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
-import 'package:flutter_map_heatmap/flutter_map_heatmap.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:celestia/core/models/forecast_data.dart';
 import 'package:celestia/core/models/location.dart';
@@ -10,6 +9,7 @@ import 'package:celestia/core/enums/weather_condition.dart';
 import 'package:celestia/core/design_system/precipitation_tile_provider.dart';
 import 'package:celestia/core/design_system/temperature_tile_provider.dart';
 import 'package:celestia/core/design_system/wind_tile_provider.dart';
+import 'package:celestia/gen/assets.gen.dart';
 
 class InteractiveWeatherMap extends StatefulWidget {
   final Location centerLocation;
@@ -73,26 +73,6 @@ class _InteractiveWeatherMapState extends State<InteractiveWeatherMap>
     _mapController.move(
       LatLng(widget.centerLocation.lat, widget.centerLocation.lon),
       6.0, // Zoom level for country view
-    );
-  }
-
-  void _toggleExpanded() {
-    Navigator.of(context).push(
-      PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) => _FullScreenMap(
-          centerLocation: widget.centerLocation,
-          forecasts: widget.forecasts,
-          currentWeather: widget.currentWeather,
-        ),
-        transitionDuration: const Duration(milliseconds: 300),
-        reverseTransitionDuration: const Duration(milliseconds: 300),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          return FadeTransition(
-            opacity: animation,
-            child: child,
-          );
-        },
-      ),
     );
   }
 
@@ -442,32 +422,6 @@ class _InteractiveWeatherMapState extends State<InteractiveWeatherMap>
     );
   }
 
-  Widget _buildExpandButton() {
-    return GestureDetector(
-      onTap: _toggleExpanded,
-      child: Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.9),
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 4,
-              offset: const Offset(0, 1),
-            ),
-          ],
-        ),
-        child: const Icon(
-          Icons.fullscreen,
-          color: Colors.grey,
-          size: 20.0,
-        ),
-      ),
-    );
-  }
-
   List<Marker> _buildMainCityMarker() {
     final markers = <Marker>[];
 
@@ -528,20 +482,22 @@ class _InteractiveWeatherMapState extends State<InteractiveWeatherMap>
             ),
           ),
           child: Column(
+            mainAxisSize: MainAxisSize.max,
             mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               // Temperature
               Text(
                 '${weather.currentTemp.round()}°',
                 style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 24.0,
-                ),
+                    color: Colors.white, fontSize: 20.0, height: 0.8),
               ),
-              Icon(
-                _getWeatherIcon(weather.condition),
-                color: Colors.white,
-                size: 15.0,
+
+              Image.asset(
+                _getWeatherIcon(weather.condition).path,
+                width: 25,
+                fit: BoxFit.contain,
+                opacity: const AlwaysStoppedAnimation(1),
               ),
             ],
           ),
@@ -596,33 +552,6 @@ class _InteractiveWeatherMapState extends State<InteractiveWeatherMap>
     );
   }
 
-  IconData _getWeatherIcon(WeatherCondition condition) {
-    switch (condition) {
-      case WeatherCondition.clear:
-        return Icons.wb_sunny;
-      case WeatherCondition.clouds:
-        return Icons.cloud;
-      case WeatherCondition.rain:
-        return Icons.grain;
-      case WeatherCondition.drizzle:
-        return Icons.grain;
-      case WeatherCondition.thunderstorm:
-        return Icons.flash_on;
-      case WeatherCondition.snow:
-        return Icons.ac_unit;
-      case WeatherCondition.mist:
-        return Icons.blur_on;
-      case WeatherCondition.fog:
-        return Icons.blur_on;
-      case WeatherCondition.haze:
-        return Icons.blur_on;
-      case WeatherCondition.smoke:
-        return Icons.blur_on;
-      default:
-        return Icons.wb_sunny;
-    }
-  }
-
   IconData _getWeatherIconFromTemp(double temp) {
     if (temp <= 5) return Icons.ac_unit;
     if (temp <= 15) return Icons.cloud;
@@ -666,144 +595,34 @@ class _InteractiveWeatherMapState extends State<InteractiveWeatherMap>
     ];
   }
 
-  List<WeightedLatLng> _generateCountryHeatmapPoints(
-      double centerLat, double centerLon) {
-    final points = <WeightedLatLng>[];
-
-    // Generate a grid of points across the country/region
-    final gridSize = 8; // 8x8 grid
-    final latRange = 3.0; // 3 degrees latitude spread
-    final lonRange = 3.0; // 3 degrees longitude spread
-
-    for (int i = 0; i < gridSize; i++) {
-      for (int j = 0; j < gridSize; j++) {
-        final lat = centerLat + (i - gridSize / 2) * (latRange / gridSize);
-        final lon = centerLon + (j - gridSize / 2) * (lonRange / gridSize);
-
-        // Generate realistic temperature variation based on distance from center
-        final distanceFromCenter = math
-            .sqrt(math.pow(lat - centerLat, 2) + math.pow(lon - centerLon, 2));
-
-        // Temperature decreases with distance (simulating elevation/geography)
-        final baseTemp = widget.currentWeather?.temperature.temp ?? 20.0;
-        final tempVariation =
-            (math.Random().nextDouble() - 0.5) * 8.0; // ±4°C variation
-        final distanceEffect =
-            -distanceFromCenter * 2.0; // -2°C per degree distance
-        final temperature = baseTemp + tempVariation + distanceEffect;
-
-        points.add(
-          WeightedLatLng(
-            LatLng(lat, lon),
-            _getTemperatureWeight(temperature),
-          ),
-        );
-      }
+  AssetGenImage _getWeatherIcon(WeatherCondition condition) {
+    switch (condition) {
+      case WeatherCondition.clear:
+        return Assets.images.iconsWeather.suny;
+      case WeatherCondition.clouds:
+        return Assets.images.iconsWeather.sunCloud;
+      case WeatherCondition.rain:
+      case WeatherCondition.drizzle:
+        return Assets.images.iconsWeather.rain;
+      case WeatherCondition.thunderstorm:
+        return Assets.images.iconsWeather.thunder;
+      case WeatherCondition.snow:
+        return Assets.images.iconsWeather.rain; // Using rain icon for snow
+      case WeatherCondition.mist:
+      case WeatherCondition.fog:
+      case WeatherCondition.haze:
+        return Assets.images.iconsWeather.moonCloud;
+      case WeatherCondition.smoke:
+      case WeatherCondition.dust:
+      case WeatherCondition.sand:
+      case WeatherCondition.ash:
+        return Assets.images.iconsWeather.moonCloud;
+      case WeatherCondition.squall:
+      case WeatherCondition.tornado:
+        return Assets.images.iconsWeather.thunder;
+      case WeatherCondition.unknown:
+        return Assets.images.iconsWeather.suny;
     }
-
-    return points;
-  }
-
-  double _getTemperatureWeight(double temp) {
-    // Normalize temperature to weight (0.1 to 1.0)
-    final normalized = (temp + 20) / 60; // Assuming temp range -20 to 40
-    return math.max(0.1, math.min(1.0, normalized));
-  }
-
-  Map<double, MaterialColor> _getTemperatureGradient() {
-    return {
-      0.0: Colors.purple,
-      0.14: Colors.indigo,
-      0.28: Colors.blue,
-      0.42: Colors.cyan,
-      0.56: Colors.green,
-      0.70: Colors.yellow,
-      0.84: Colors.orange,
-      1.0: Colors.red,
-    };
-  }
-
-  double _getPrecipitationWeight(double precipitation) {
-    // Normalize precipitation to weight (0.0 to 1.0)
-    // Assuming precipitation range 0 to 50mm
-    final normalized = precipitation / 50.0;
-    return math.max(0.0, math.min(1.0, normalized));
-  }
-
-  List<WeightedLatLng> _generateGlobalPrecipitationPoints(
-      double centerLat, double centerLon) {
-    final points = <WeightedLatLng>[];
-
-    // Generate a more uniform global grid of precipitation points
-    final gridSize = 30; // 30x30 grid for better coverage
-    final latRange = 80.0; // 80 degrees latitude spread (global)
-    final lonRange = 160.0; // 160 degrees longitude spread (global)
-
-    for (int i = 0; i < gridSize; i++) {
-      for (int j = 0; j < gridSize; j++) {
-        final lat = centerLat + (i - gridSize / 2) * (latRange / gridSize);
-        final lon = centerLon + (j - gridSize / 2) * (lonRange / gridSize);
-
-        // Clamp coordinates to valid ranges
-        final clampedLat = lat.clamp(-85.0, 85.0);
-        final clampedLon = lon.clamp(-180.0, 180.0);
-
-        // Generate more uniform precipitation distribution
-        double precipitation = _generateUniformPrecipitationForLocation(
-            clampedLat, clampedLon, centerLat, centerLon);
-
-        // Always add points for uniform coverage, but with varying weights
-        points.add(
-          WeightedLatLng(
-            LatLng(clampedLat, clampedLon),
-            _getPrecipitationWeight(precipitation),
-          ),
-        );
-      }
-    }
-
-    return points;
-  }
-
-  double _generateUniformPrecipitationForLocation(
-      double lat, double lon, double centerLat, double centerLon) {
-    // Get base precipitation from forecast data
-    final basePrecipitation = _getBasePrecipitationFromForecast();
-
-    // Calculate distance from center location
-    final distance =
-        math.sqrt(math.pow(lat - centerLat, 2) + math.pow(lon - centerLon, 2));
-
-    // Use a gentler distance decay for more uniform distribution
-    final distanceFactor = math.exp(-distance / 25.0); // More gradual decay
-
-    // Add some structured variation based on latitude (weather patterns)
-    final latitudeFactor = 1.0 + 0.3 * math.sin(lat * math.pi / 90.0);
-
-    // Add some structured variation based on longitude (continental patterns)
-    final longitudeFactor = 1.0 + 0.2 * math.sin(lon * math.pi / 180.0);
-
-    // Combine all factors for more realistic but uniform distribution
-    final precipitation =
-        basePrecipitation * distanceFactor * latitudeFactor * longitudeFactor;
-
-    return math.max(0.0, precipitation);
-  }
-
-  double _getBasePrecipitationFromForecast() {
-    // Calculate average precipitation from forecast data
-    double totalPrecipitation = 0.0;
-    int forecastCount = 0;
-
-    for (final forecast in widget.forecasts.take(8)) {
-      if (forecast.rain != null && forecast.rain!.precipitation > 0) {
-        totalPrecipitation += forecast.rain!.precipitation;
-        forecastCount++;
-      }
-    }
-
-    // Return average precipitation, or a default value if no data
-    return forecastCount > 0 ? totalPrecipitation / forecastCount : 2.0;
   }
 }
 
@@ -811,12 +630,10 @@ class _InteractiveWeatherMapState extends State<InteractiveWeatherMap>
 class _FullScreenMap extends StatefulWidget {
   final Location centerLocation;
   final List<HourlyForecast> forecasts;
-  final WeatherData? currentWeather;
 
   const _FullScreenMap({
     required this.centerLocation,
     required this.forecasts,
-    this.currentWeather,
   });
 
   @override

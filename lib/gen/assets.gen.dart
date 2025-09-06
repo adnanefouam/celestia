@@ -81,8 +81,19 @@ class $AssetsImagesGen {
   AssetGenImage get firstScreenImage =>
       const AssetGenImage('assets/images/first-screen-image.png');
 
+  /// Directory path: assets/images/icons-weather
+  $AssetsImagesIconsWeatherGen get iconsWeather =>
+      const $AssetsImagesIconsWeatherGen();
+
   /// File path: assets/images/no-city.png
   AssetGenImage get noCity => const AssetGenImage('assets/images/no-city.png');
+
+  /// Directory path: assets/images/savedwether
+  $AssetsImagesSavedwetherGen get savedwether =>
+      const $AssetsImagesSavedwetherGen();
+
+  /// File path: assets/images/sunset.png
+  AssetGenImage get sunset => const AssetGenImage('assets/images/sunset.png');
 
   /// File path: assets/images/warm.png
   AssetGenImage get warm => const AssetGenImage('assets/images/warm.png');
@@ -98,8 +109,66 @@ class $AssetsImagesGen {
     cold,
     firstScreenImage,
     noCity,
+    sunset,
     warm,
   ];
+}
+
+class $AssetsImagesIconsWeatherGen {
+  const $AssetsImagesIconsWeatherGen();
+
+  /// File path: assets/images/icons-weather/moon-cloud.png
+  AssetGenImage get moonCloud =>
+      const AssetGenImage('assets/images/icons-weather/moon-cloud.png');
+
+  /// File path: assets/images/icons-weather/rain.png
+  AssetGenImage get rain =>
+      const AssetGenImage('assets/images/icons-weather/rain.png');
+
+  /// File path: assets/images/icons-weather/sun-cloud.png
+  AssetGenImage get sunCloud =>
+      const AssetGenImage('assets/images/icons-weather/sun-cloud.png');
+
+  /// File path: assets/images/icons-weather/sun-rain.png
+  AssetGenImage get sunRain =>
+      const AssetGenImage('assets/images/icons-weather/sun-rain.png');
+
+  /// File path: assets/images/icons-weather/suny.png
+  AssetGenImage get suny =>
+      const AssetGenImage('assets/images/icons-weather/suny.png');
+
+  /// File path: assets/images/icons-weather/thunder.png
+  AssetGenImage get thunder =>
+      const AssetGenImage('assets/images/icons-weather/thunder.png');
+
+  /// List of all assets
+  List<AssetGenImage> get values => [
+    moonCloud,
+    rain,
+    sunCloud,
+    sunRain,
+    suny,
+    thunder,
+  ];
+}
+
+class $AssetsImagesSavedwetherGen {
+  const $AssetsImagesSavedwetherGen();
+
+  /// File path: assets/images/savedwether/morning.png
+  AssetGenImage get morning =>
+      const AssetGenImage('assets/images/savedwether/morning.png');
+
+  /// File path: assets/images/savedwether/night.png
+  AssetGenImage get night =>
+      const AssetGenImage('assets/images/savedwether/night.png');
+
+  /// File path: assets/images/savedwether/noon.png
+  AssetGenImage get noon =>
+      const AssetGenImage('assets/images/savedwether/noon.png');
+
+  /// List of all assets
+  List<AssetGenImage> get values => [morning, night, noon];
 }
 
 class Assets {

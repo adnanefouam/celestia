@@ -40,6 +40,7 @@ dependencies:
   
   # HTTP requests
   dio: ^5.7.0
+  http: ^1.1.0
   
   # JSON annotation
   json_annotation: ^4.9.0

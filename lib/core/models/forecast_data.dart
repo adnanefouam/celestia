@@ -44,11 +44,17 @@ class HourlyForecast extends Equatable {
   final TemperatureData temperature;
   @JsonKey(name: 'weather')
   final List<WeatherInfo> weather;
+  @JsonKey(name: 'rain')
+  final PrecipitationData? rain;
+  @JsonKey(name: 'pop')
+  final double? probabilityOfPrecipitation;
 
   const HourlyForecast({
     required this.timestamp,
     required this.temperature,
     required this.weather,
+    this.rain,
+    this.probabilityOfPrecipitation,
   });
 
   factory HourlyForecast.fromJson(Map<String, dynamic> json) =>
@@ -57,7 +63,8 @@ class HourlyForecast extends Equatable {
   Map<String, dynamic> toJson() => _$HourlyForecastToJson(this);
 
   @override
-  List<Object?> get props => [timestamp, temperature, weather];
+  List<Object?> get props =>
+      [timestamp, temperature, weather, rain, probabilityOfPrecipitation];
 
   DateTime get dateTime =>
       DateTime.fromMillisecondsSinceEpoch(timestamp * 1000);
@@ -114,4 +121,31 @@ class Coordinates extends Equatable {
 
   @override
   List<Object?> get props => [latitude, longitude];
+}
+
+// Precipitation data from OpenWeatherMap "rain" object
+@JsonSerializable()
+class PrecipitationData extends Equatable {
+  @JsonKey(name: '1h')
+  final double? oneHour;
+  @JsonKey(name: '3h')
+  final double? threeHour;
+
+  const PrecipitationData({
+    this.oneHour,
+    this.threeHour,
+  });
+
+  factory PrecipitationData.fromJson(Map<String, dynamic> json) =>
+      _$PrecipitationDataFromJson(json);
+
+  Map<String, dynamic> toJson() => _$PrecipitationDataToJson(this);
+
+  @override
+  List<Object?> get props => [oneHour, threeHour];
+
+  // Get the most relevant precipitation value
+  double get precipitation {
+    return oneHour ?? threeHour ?? 0.0;
+  }
 }

@@ -412,7 +412,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Assets.images.nocity.image(width: 150),
+            Assets.images.city1.image(width: 150),
             SizedBox(height: AppSpacing.lg),
             Text(
               'No cities found...',

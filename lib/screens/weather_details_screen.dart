@@ -2,7 +2,7 @@ import 'package:celestia/core/design_system/app_colors.dart';
 import 'package:celestia/core/design_system/app_spacing.dart';
 import 'package:celestia/core/design_system/app_typography.dart';
 import 'package:celestia/core/design_system/wind_info_card.dart';
-import 'package:celestia/core/design_system/flutter_map_heatmap.dart';
+import 'package:celestia/core/design_system/interactive_weather_map.dart';
 import 'package:celestia/core/models/weather_data.dart';
 import 'package:celestia/core/models/location.dart';
 import 'package:celestia/core/models/forecast_data.dart';
@@ -225,31 +225,87 @@ class _WeatherDetailsScreenState extends ConsumerState<WeatherDetailsScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.backgroundPrimary,
-      body: SafeArea(
-        child: Column(
-          children: [
-            _buildHeader(location, weather),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Wind Information
-                    if (_currentWeather?.wind != null) ...[
-                      WindInfoCard(wind: _currentWeather!.wind!),
-                      SizedBox(height: AppSpacing.lg),
-                    ],
-
-                    _buildHourlyForecast(),
-                    SizedBox(height: AppSpacing.lg),
-                    _buildDailyForecast(),
-                  ],
-                ),
+      body: Stack(
+        children: [
+          // Map as background layer
+          if (_forecastData != null && _forecastData!.forecasts.isNotEmpty)
+            Positioned.fill(
+              child: InteractiveWeatherMap(
+                centerLocation: location,
+                forecasts: _forecastData!.forecasts.take(8).toList(),
+                currentWeather: weather,
+                radius: 50.0, // 50km radius around the city
               ),
             ),
-          ],
-        ),
+
+          // Bottom sheet with weather details
+          DraggableScrollableSheet(
+            initialChildSize: 0.4,
+            minChildSize: 0.2,
+            maxChildSize: 0.95,
+            builder: (context, scrollController) {
+              return Container(
+                decoration: BoxDecoration(
+                  color: AppColors.backgroundPrimary,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(20),
+                    topRight: Radius.circular(20),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 10,
+                      offset: Offset(0, -2),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    // Drag handle
+                    Container(
+                      width: 40,
+                      height: 4,
+                      margin: EdgeInsets.symmetric(vertical: 12),
+                      decoration: BoxDecoration(
+                        color: AppColors.textTertiary,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+
+                    // Weather content
+                    Expanded(
+                      child: SingleChildScrollView(
+                        controller: scrollController,
+                        padding:
+                            EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildHeader(location, weather),
+                            SizedBox(height: AppSpacing.lg),
+
+                            // Wind Information
+                            if (_currentWeather?.wind != null) ...[
+                              WindInfoCard(wind: _currentWeather!.wind!),
+                              SizedBox(height: AppSpacing.lg),
+                            ],
+
+                            _buildHourlyForecast(),
+                            SizedBox(height: AppSpacing.lg),
+                            _buildDailyForecast(),
+                            SizedBox(
+                                height:
+                                    AppSpacing.xl), // Extra padding at bottom
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ],
       ),
     );
   }
@@ -269,14 +325,22 @@ class _WeatherDetailsScreenState extends ConsumerState<WeatherDetailsScreen> {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: AppColors.primaryOrange,
+                    color: Colors.transparent,
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
                     Icons.arrow_back_ios_new,
-                    color: Colors.white,
+                    color: Colors.black,
                     size: 20,
                   ),
+                ),
+              ),
+              SizedBox(width: AppSpacing.sm),
+              Text(
+                '${location.name}, ${location.country}',
+                style: AppTypography.displaySmall.copyWith(
+                  fontSize: 18,
+                  color: AppColors.textPrimary,
                 ),
               ),
             ],
@@ -286,42 +350,51 @@ class _WeatherDetailsScreenState extends ConsumerState<WeatherDetailsScreen> {
           // City name
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    '${location.name}',
-                    style: AppTypography.displaySmall.copyWith(
-                      fontSize: 32,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
                   // Temperature and condition
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 20.0),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        // Large temperature with weather-based styling
-                        _buildTemperatureDisplay(weather),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // Large temperature with weather-based styling
+                      _buildTemperatureDisplay(weather),
 
-                        // Condition and high/low
-                      ],
-                    ),
+                      // Condition and high/low
+                      if (_currentWeather != null)
+                        Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Weather condition
+                            Text(
+                              _getWeatherConditionText(
+                                  _currentWeather!.condition),
+                              style: const TextStyle(
+                                color: Color(0xFF2A2A2B),
+                                fontSize: 18,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            SizedBox(height: 4),
+                            // High/Low temperatures
+                            Text(
+                              'H:${_getHighTemperature().round()}° L:${_getLowTemperature().round()}°',
+                              style: const TextStyle(
+                                color: Color(0xFF2A2A2B),
+                                fontSize: 18,
+                                fontWeight: FontWeight.w400,
+                              ),
+                            ),
+                          ],
+                        ),
+                    ],
                   ),
                 ],
               ),
-              // Flutter Map Temperature Heatmap
-              if (_forecastData != null &&
-                  _forecastData!.forecasts.isNotEmpty) ...[
-                FlutterMapHeatmap(
-                  centerLocation: location,
-                  forecasts: _forecastData!.forecasts.take(8).toList(),
-                  radius: 50.0, // 50km radius around the city
-                ),
-              ],
             ],
           ),
         ],
@@ -705,10 +778,10 @@ class _WeatherDetailsScreenState extends ConsumerState<WeatherDetailsScreen> {
         Text(
           '${weather.currentTemp.round()}°',
           style: TextStyle(
-            fontSize: 100,
+            fontSize: 80,
             fontWeight: FontWeight.w300,
             color: temperatureColor,
-            height: 0.9,
+            height: 0.55,
           ),
         ),
         // Weather overlay
@@ -747,6 +820,69 @@ class _WeatherDetailsScreenState extends ConsumerState<WeatherDetailsScreen> {
         condition == WeatherCondition.fog ||
         condition == WeatherCondition.haze ||
         condition == WeatherCondition.smoke;
+  }
+
+  String _getWeatherConditionText(WeatherCondition condition) {
+    switch (condition) {
+      case WeatherCondition.clear:
+        return 'Clear';
+      case WeatherCondition.clouds:
+        return 'Partly Cloudy';
+      case WeatherCondition.rain:
+        return 'Rain';
+      case WeatherCondition.drizzle:
+        return 'Drizzle';
+      case WeatherCondition.thunderstorm:
+        return 'Thunderstorm';
+      case WeatherCondition.snow:
+        return 'Snow';
+      case WeatherCondition.mist:
+        return 'Mist';
+      case WeatherCondition.fog:
+        return 'Fog';
+      case WeatherCondition.haze:
+        return 'Haze';
+      case WeatherCondition.dust:
+        return 'Dust';
+      case WeatherCondition.sand:
+        return 'Sand';
+      case WeatherCondition.ash:
+        return 'Ash';
+      case WeatherCondition.squall:
+        return 'Squall';
+      case WeatherCondition.tornado:
+        return 'Tornado';
+      case WeatherCondition.smoke:
+        return 'Smoke';
+      case WeatherCondition.unknown:
+        return 'Unknown';
+    }
+  }
+
+  double _getHighTemperature() {
+    if (_forecastData == null || _forecastData!.forecasts.isEmpty)
+      return (_currentWeather?.currentTemp ?? 0.0).toDouble();
+
+    double maxTemp = (_currentWeather?.currentTemp ?? 0.0).toDouble();
+    for (final forecast in _forecastData!.forecasts) {
+      if (forecast.temperature.temp.toDouble() > maxTemp) {
+        maxTemp = forecast.temperature.temp.toDouble();
+      }
+    }
+    return maxTemp;
+  }
+
+  double _getLowTemperature() {
+    if (_forecastData == null || _forecastData!.forecasts.isEmpty)
+      return (_currentWeather?.currentTemp ?? 0.0).toDouble();
+
+    double minTemp = (_currentWeather?.currentTemp ?? 0.0).toDouble();
+    for (final forecast in _forecastData!.forecasts) {
+      if (forecast.temperature.temp.toDouble() < minTemp) {
+        minTemp = forecast.temperature.temp.toDouble();
+      }
+    }
+    return minTemp;
   }
 }
 

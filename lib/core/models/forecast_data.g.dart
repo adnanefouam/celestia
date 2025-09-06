@@ -27,6 +27,10 @@ HourlyForecast _$HourlyForecastFromJson(Map<String, dynamic> json) =>
       weather: (json['weather'] as List<dynamic>)
           .map((e) => WeatherInfo.fromJson(e as Map<String, dynamic>))
           .toList(),
+      rain: json['rain'] == null
+          ? null
+          : PrecipitationData.fromJson(json['rain'] as Map<String, dynamic>),
+      probabilityOfPrecipitation: (json['pop'] as num?)?.toDouble(),
     );
 
 Map<String, dynamic> _$HourlyForecastToJson(HourlyForecast instance) =>
@@ -34,6 +38,8 @@ Map<String, dynamic> _$HourlyForecastToJson(HourlyForecast instance) =>
       'dt': instance.timestamp,
       'main': instance.temperature,
       'weather': instance.weather,
+      'rain': instance.rain,
+      'pop': instance.probabilityOfPrecipitation,
     };
 
 CityInfo _$CityInfoFromJson(Map<String, dynamic> json) => CityInfo(
@@ -59,4 +65,16 @@ Map<String, dynamic> _$CoordinatesToJson(Coordinates instance) =>
     <String, dynamic>{
       'lat': instance.latitude,
       'lon': instance.longitude,
+    };
+
+PrecipitationData _$PrecipitationDataFromJson(Map<String, dynamic> json) =>
+    PrecipitationData(
+      oneHour: (json['1h'] as num?)?.toDouble(),
+      threeHour: (json['3h'] as num?)?.toDouble(),
+    );
+
+Map<String, dynamic> _$PrecipitationDataToJson(PrecipitationData instance) =>
+    <String, dynamic>{
+      '1h': instance.oneHour,
+      '3h': instance.threeHour,
     };

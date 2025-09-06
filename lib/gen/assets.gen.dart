@@ -1,5 +1,3 @@
-// dart format width=80
-
 /// GENERATED CODE - DO NOT MODIFY BY HAND
 /// *****************************************************
 ///  FlutterGen
@@ -7,7 +5,7 @@
 
 // coverage:ignore-file
 // ignore_for_file: type=lint
-// ignore_for_file: deprecated_member_use,directives_ordering,implicit_dynamic_list_literal,unnecessary_import
+// ignore_for_file: directives_ordering,unnecessary_import,implicit_dynamic_list_literal,deprecated_member_use
 
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
@@ -20,55 +18,18 @@ class $AssetsFontsGen {
   /// File path: assets/fonts/Britti-Sans-Medium.ttf
   String get brittiSansMedium => 'assets/fonts/Britti-Sans-Medium.ttf';
 
-  /// File path: assets/fonts/BrittiSansVariable-Bold.ttf
-  String get brittiSansVariableBold =>
-      'assets/fonts/BrittiSansVariable-Bold.ttf';
-
-  /// File path: assets/fonts/BrittiSansVariable-Medium.ttf
-  String get brittiSansVariableMedium =>
-      'assets/fonts/BrittiSansVariable-Medium.ttf';
-
-  /// File path: assets/fonts/BrittiSansVariable-Regular.ttf
-  String get brittiSansVariableRegular =>
-      'assets/fonts/BrittiSansVariable-Regular.ttf';
-
-  /// File path: assets/fonts/BrittiSansVariable-SemiBold.ttf
-  String get brittiSansVariableSemiBold =>
-      'assets/fonts/BrittiSansVariable-SemiBold.ttf';
-
-  /// File path: assets/fonts/Recoletta-Bold.ttf
-  String get recolettaBold => 'assets/fonts/Recoletta-Bold.ttf';
-
-  /// File path: assets/fonts/Recoletta-Medium.ttf
-  String get recolettaMedium => 'assets/fonts/Recoletta-Medium.ttf';
-
-  /// File path: assets/fonts/Recoletta-Regular.ttf
-  String get recolettaRegular => 'assets/fonts/Recoletta-Regular.ttf';
-
-  /// File path: assets/fonts/Recoletta-SemiBold.ttf
-  String get recolettaSemiBold => 'assets/fonts/Recoletta-SemiBold.ttf';
-
   /// List of all assets
-  List<String> get values => [
-        brittiSansMedium,
-        brittiSansVariableBold,
-        brittiSansVariableMedium,
-        brittiSansVariableRegular,
-        brittiSansVariableSemiBold,
-        recolettaBold,
-        recolettaMedium,
-        recolettaRegular,
-        recolettaSemiBold
-      ];
+  List<String> get values => [brittiSansMedium];
 }
 
 class $AssetsIconsGen {
   const $AssetsIconsGen();
 
+  /// File path: assets/icons/arrow-up.svg
+  SvgGenImage get arrowUp => const SvgGenImage('assets/icons/arrow-up.svg');
+
   /// File path: assets/icons/back-icon.svg
   SvgGenImage get backIcon => const SvgGenImage('assets/icons/back-icon.svg');
-
-  SvgGenImage get arrowUp => const SvgGenImage('assets/icons/arrow-up.svg');
 
   /// File path: assets/icons/celestia-logo.svg
   SvgGenImage get celestiaLogo =>
@@ -82,8 +43,13 @@ class $AssetsIconsGen {
   SvgGenImage get sunLogo => const SvgGenImage('assets/icons/sun-logo.svg');
 
   /// List of all assets
-  List<SvgGenImage> get values =>
-      [backIcon, celestiaLogo, searchIcon, sunLogo, arrowUp];
+  List<SvgGenImage> get values => [
+    arrowUp,
+    backIcon,
+    celestiaLogo,
+    searchIcon,
+    sunLogo,
+  ];
 }
 
 class $AssetsImagesGen {
@@ -92,8 +58,6 @@ class $AssetsImagesGen {
   /// File path: assets/images/allow-location-image.png
   AssetGenImage get allowLocationImage =>
       const AssetGenImage('assets/images/allow-location-image.png');
-
-  AssetGenImage get nocity => const AssetGenImage('assets/images/no-city.png');
 
   /// File path: assets/images/city1.png
   AssetGenImage get city1 => const AssetGenImage('assets/images/city1.png');
@@ -110,13 +74,32 @@ class $AssetsImagesGen {
   /// File path: assets/images/city5.png
   AssetGenImage get city5 => const AssetGenImage('assets/images/city5.png');
 
+  /// File path: assets/images/cold.png
+  AssetGenImage get cold => const AssetGenImage('assets/images/cold.png');
+
   /// File path: assets/images/first-screen-image.png
   AssetGenImage get firstScreenImage =>
       const AssetGenImage('assets/images/first-screen-image.png');
 
+  /// File path: assets/images/no-city.png
+  AssetGenImage get noCity => const AssetGenImage('assets/images/no-city.png');
+
+  /// File path: assets/images/warm.png
+  AssetGenImage get warm => const AssetGenImage('assets/images/warm.png');
+
   /// List of all assets
-  List<AssetGenImage> get values =>
-      [allowLocationImage, city1, city2, city3, city4, city5, firstScreenImage,nocity];
+  List<AssetGenImage> get values => [
+    allowLocationImage,
+    city1,
+    city2,
+    city3,
+    city4,
+    city5,
+    cold,
+    firstScreenImage,
+    noCity,
+    warm,
+  ];
 }
 
 class Assets {
@@ -128,18 +111,12 @@ class Assets {
 }
 
 class AssetGenImage {
-  const AssetGenImage(
-    this._assetName, {
-    this.size,
-    this.flavors = const {},
-    this.animation,
-  });
+  const AssetGenImage(this._assetName, {this.size, this.flavors = const {}});
 
   final String _assetName;
 
   final Size? size;
   final Set<String> flavors;
-  final AssetGenImageAnimation? animation;
 
   Image image({
     Key? key,
@@ -194,15 +171,8 @@ class AssetGenImage {
     );
   }
 
-  ImageProvider provider({
-    AssetBundle? bundle,
-    String? package,
-  }) {
-    return AssetImage(
-      _assetName,
-      bundle: bundle,
-      package: package,
-    );
+  ImageProvider provider({AssetBundle? bundle, String? package}) {
+    return AssetImage(_assetName, bundle: bundle, package: package);
   }
 
   String get path => _assetName;
@@ -210,30 +180,12 @@ class AssetGenImage {
   String get keyName => _assetName;
 }
 
-class AssetGenImageAnimation {
-  const AssetGenImageAnimation({
-    required this.isAnimation,
-    required this.duration,
-    required this.frames,
-  });
-
-  final bool isAnimation;
-  final Duration duration;
-  final int frames;
-}
-
 class SvgGenImage {
-  const SvgGenImage(
-    this._assetName, {
-    this.size,
-    this.flavors = const {},
-  }) : _isVecFormat = false;
+  const SvgGenImage(this._assetName, {this.size, this.flavors = const {}})
+    : _isVecFormat = false;
 
-  const SvgGenImage.vec(
-    this._assetName, {
-    this.size,
-    this.flavors = const {},
-  }) : _isVecFormat = true;
+  const SvgGenImage.vec(this._assetName, {this.size, this.flavors = const {}})
+    : _isVecFormat = true;
 
   final String _assetName;
   final Size? size;
@@ -254,7 +206,6 @@ class SvgGenImage {
     String? semanticsLabel,
     bool excludeFromSemantics = false,
     _svg.SvgTheme? theme,
-    _svg.ColorMapper? colorMapper,
     ColorFilter? colorFilter,
     Clip clipBehavior = Clip.hardEdge,
     @deprecated Color? color,
@@ -274,7 +225,6 @@ class SvgGenImage {
         assetBundle: bundle,
         packageName: package,
         theme: theme,
-        colorMapper: colorMapper,
       );
     }
     return _svg.SvgPicture(
@@ -289,7 +239,8 @@ class SvgGenImage {
       placeholderBuilder: placeholderBuilder,
       semanticsLabel: semanticsLabel,
       excludeFromSemantics: excludeFromSemantics,
-      colorFilter: colorFilter ??
+      colorFilter:
+          colorFilter ??
           (color == null ? null : ColorFilter.mode(color, colorBlendMode)),
       clipBehavior: clipBehavior,
       cacheColorFilter: cacheColorFilter,

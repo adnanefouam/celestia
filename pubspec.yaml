@@ -74,6 +74,9 @@ dependencies:
   # Location services
   geolocator: ^13.0.1
   permission_handler: ^11.3.1
+  
+  # Splash screen
+  flutter_native_splash: ^2.4.1
 
 dev_dependencies:
   flutter_test:
@@ -92,6 +95,9 @@ dev_dependencies:
   
   # JSON serialization
   json_serializable: ^6.8.0
+  
+  # App icons
+  flutter_launcher_icons: ^0.13.1
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -105,6 +111,7 @@ flutter:
     - assets/images/
     - assets/images/icons-weather/
     - assets/images/savedwether/
+    - assets/images/splash/
     - assets/icons/
     - assets/fonts/
   
@@ -140,3 +147,36 @@ flutter_gen:
     
   colors:
     enabled: false
+
+# Flutter Native Splash configuration
+flutter_native_splash:
+  color: "#FFFFFF"
+  image: assets/images/splash/splash.png
+
+  color_dark: "#000000"
+  image_dark: assets/images/splash/splash.png
+  android_12:
+    image: assets/images/splash/splash.png
+    color: "#FFFFFF"
+    image_dark: assets/images/splash/splash.png
+    color_dark: "#000000"
+
+# Flutter Launcher Icons configuration
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/images/splash/applogo.png"
+  min_sdk_android: 21
+  remove_alpha_ios: true
+  web:
+    generate: true
+    image_path: "assets/images/splash/applogo.png"
+    background_color: "#hexcode"
+    theme_color: "#hexcode"
+  windows:
+    generate: true
+    image_path: "assets/images/splash/applogo.png"
+    icon_size: 48
+  macos:
+    generate: true
+    image_path: "assets/images/splash/applogo.png"

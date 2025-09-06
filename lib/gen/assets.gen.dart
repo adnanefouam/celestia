@@ -92,6 +92,9 @@ class $AssetsImagesGen {
   $AssetsImagesSavedwetherGen get savedwether =>
       const $AssetsImagesSavedwetherGen();
 
+  /// Directory path: assets/images/splash
+  $AssetsImagesSplashGen get splash => const $AssetsImagesSplashGen();
+
   /// File path: assets/images/sunset.png
   AssetGenImage get sunset => const AssetGenImage('assets/images/sunset.png');
 
@@ -169,6 +172,21 @@ class $AssetsImagesSavedwetherGen {
 
   /// List of all assets
   List<AssetGenImage> get values => [morning, night, noon];
+}
+
+class $AssetsImagesSplashGen {
+  const $AssetsImagesSplashGen();
+
+  /// File path: assets/images/splash/applogo.png
+  AssetGenImage get applogo =>
+      const AssetGenImage('assets/images/splash/applogo.png');
+
+  /// File path: assets/images/splash/splash.png
+  AssetGenImage get splash =>
+      const AssetGenImage('assets/images/splash/splash.png');
+
+  /// List of all assets
+  List<AssetGenImage> get values => [applogo, splash];
 }
 
 class Assets {

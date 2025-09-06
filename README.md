@@ -19,6 +19,7 @@
 - **Dart**: Modern programming language with strong typing and null safety
 
 ### State Management
+
 - **Riverpod**: Reactive state management for predictable and testable code
 - **Provider Pattern**: Clean separation of concerns with centralized state
 
@@ -142,6 +143,15 @@ The app dynamically displays weather backgrounds based on each city's actual loc
 - **Real-Time Updates**: Reactive state management ensures UI consistency
 - **Performance**: Optimized loading states and efficient data handling
 
----
+<img width="1170" height="2532" alt="IMG_3211" src="https://github.com/user-attachments/assets/0d298a81-8ed8-4a7c-ad0b-56ca921e0cf2" />
+<img width="1170" height="2532" alt="IMG_3210" src="https://github.com/user-attachments/assets/72602510-e67d-4129-a8fb-974b79778f7c" />
+<img width="1170" height="2532" alt="IMG_3209" src="https://github.com/user-attachments/assets/37b3fef4-8699-4cbe-8dae-bd4b45c4c5ac" />
+<img width="1170" height="2532" alt="IMG_3208" src="https://github.com/user-attachments/assets/d10defcd-1a23-4f7d-bb1d-beb0d62a9514" />
+<img width="1170" height="2532" alt="IMG_3207" src="https://github.com/user-attachments/assets/f0e44c89-c06e-4716-96ae-099bcc7ebe45" />
+<img width="1170" height="2532" alt="IMG_3206" src="https://github.com/user-attachments/assets/c9c41f51-5f6b-460e-800a-a5b9a44581df" />
+<img width="1170" height="2532" alt="IMG_3205" src="https://github.com/user-attachments/assets/701496af-a9c5-4d7f-a097-5f4be2e3a08c" />
+<img width="1170" height="2532" alt="IMG_3204" src="https://github.com/user-attachments/assets/d021cc74-4e22-4684-978f-602c5d875659" />
+<img width="1170" height="2532" alt="IMG_3193" src="https://github.com/user-attachments/assets/eb9026c5-4793-429f-8802-7ed0102559d6" />
+<img width="1170" height="2532" alt="IMG_3188" src="https://github.com/user-attachments/assets/23e028f5-be8a-452f-97b3-79741b6e0f01" />
 
 *Designed & developed with ❤️ by @Fouham Adnane*

@@ -5,6 +5,7 @@ import 'package:celestia/core/providers/providers.dart';
 import 'package:celestia/gen/assets.gen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:shimmer/shimmer.dart';
 import 'dart:async';
 
@@ -52,14 +53,21 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
 
   void _onSearchChanged(String query) {
     if (query.trim().isEmpty) {
+      _debounceTimer?.cancel();
       ref.read(searchProvider.notifier).clearSearch();
       return;
     }
 
+    // Show loading state immediately when user starts typing
+    ref.read(searchProvider.notifier).setLoadingState(query);
+
     _debounceTimer?.cancel();
-    _debounceTimer = Timer(const Duration(milliseconds: 500), () {
-      if (_searchController.text == query) {
+    _debounceTimer = Timer(const Duration(milliseconds: 300), () {
+      if (_searchController.text == query && query.trim().length >= 2) {
         ref.read(searchProvider.notifier).searchCities(query);
+      } else if (query.trim().length < 2) {
+        // Clear results if query is too short
+        ref.read(searchProvider.notifier).clearSearch();
       }
     });
   }
@@ -69,7 +77,13 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
     _searchFocusNode.unfocus();
 
     ref.read(searchProvider.notifier).selectLocation(locationWithWeather);
-    ref.read(searchProvider.notifier).clearSearch();
+    // Don't clear search - keep the results visible when user comes back
+
+    // Navigate to weather details screen
+    context.pushNamed(
+      'weather-details',
+      extra: locationWithWeather,
+    );
   }
 
   @override
@@ -190,6 +204,36 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
                                 ),
                               ),
                             ),
+                            // Clear button when there's text
+                            ValueListenableBuilder<TextEditingValue>(
+                              valueListenable: _searchController,
+                              builder: (context, value, child) {
+                                if (value.text.isNotEmpty) {
+                                  return GestureDetector(
+                                    onTap: () {
+                                      _searchController.clear();
+                                      ref
+                                          .read(searchProvider.notifier)
+                                          .clearSearch();
+                                    },
+                                    child: Container(
+                                      width: 20,
+                                      height: 20,
+                                      decoration: BoxDecoration(
+                                        color: AppColors.textTertiary,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: Icon(
+                                        Icons.close,
+                                        size: 14,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  );
+                                }
+                                return SizedBox.shrink();
+                              },
+                            ),
                           ],
                         ),
                       ),
@@ -203,7 +247,9 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
                     ? _buildShimmerList()
                     : hasResults
                         ? _buildSearchResults(searchState.results)
-                        : _buildMainContent(),
+                        : searchState.query.isNotEmpty
+                            ? _buildNoResultsState()
+                            : _buildMainContent(),
               ),
             ],
           ),
@@ -298,40 +344,93 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
   }
 
   Widget _buildSearchResultItem(LocationWithWeather result) {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.symmetric(
-        horizontal: AppSpacing.sm,
-        vertical: AppSpacing.xs,
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Expanded(
-            child: Text(
-              '${result.location.name}, ${result.location.country}',
-              style: AppTypography.bodyLarge.copyWith(
-                color: const Color(0xFF030003),
-                fontSize: 20.14,
-                fontWeight: FontWeight.w500,
-                height: 1.21,
-                letterSpacing: -0.12,
+    return InkWell(
+      onTap: () => _selectLocation(result),
+      child: Container(
+        width: double.infinity,
+        padding: EdgeInsets.symmetric(
+          horizontal: AppSpacing.sm,
+          vertical: AppSpacing.xs,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    result.location.name,
+                    style: AppTypography.bodyLarge.copyWith(
+                      color: const Color(0xFF030003),
+                      fontSize: 20.14,
+                      fontWeight: FontWeight.w500,
+                      height: 1.21,
+                      letterSpacing: -0.12,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  if (result.location.state != null &&
+                      result.location.state!.isNotEmpty)
+                    Text(
+                      '${result.location.state}, ${result.location.country}',
+                      style: AppTypography.bodySmall.copyWith(
+                        color: AppColors.textSecondary,
+                        fontSize: 14,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    )
+                  else
+                    Text(
+                      result.location.country ?? '',
+                      style: AppTypography.bodySmall.copyWith(
+                        color: AppColors.textSecondary,
+                        fontSize: 14,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                ],
               ),
-              overflow: TextOverflow.ellipsis,
             ),
-          ),
-          SizedBox(width: AppSpacing.sm),
-          InkWell(
-            onTap: () => _selectLocation(result),
-            borderRadius: BorderRadius.circular(12),
-            child: Assets.icons.arrowUp.svg(
+            SizedBox(width: AppSpacing.sm),
+            Assets.icons.arrowUp.svg(
               width: 25,
               height: 25,
             ),
-          ),
-        ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNoResultsState() {
+    return Center(
+      child: Padding(
+        padding: AppSpacing.paddingHorizontalLG,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Assets.images.city1.image(width: 150),
+            SizedBox(height: AppSpacing.lg),
+            Text(
+              'No cities found...',
+              style: AppTypography.headlineMedium.copyWith(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            SizedBox(height: AppSpacing.sm),
+            Text(
+              'Try searching with a different keyword',
+              style: AppTypography.bodyMedium.copyWith(
+                color: AppColors.textSecondary,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
       ),
     );
   }

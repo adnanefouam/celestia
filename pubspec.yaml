@@ -40,6 +40,7 @@ dependencies:
   
   # HTTP requests
   dio: ^5.7.0
+  http: ^1.1.0
   
   # JSON annotation
   json_annotation: ^4.9.0
@@ -61,6 +62,14 @@ dependencies:
   
   # Vector graphics for SVG support
   vector_graphics: ^1.1.18
+  
+  # Date and time formatting
+  intl: ^0.19.0
+  
+  # Maps
+  flutter_map: ^7.0.2
+  flutter_map_heatmap: ^0.0.8
+  latlong2: ^0.9.1
 
 dev_dependencies:
   flutter_test:

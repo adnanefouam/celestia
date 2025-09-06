@@ -2,10 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../screens/welcome_screen.dart';
 import '../../screens/weather_screen.dart';
+import '../../screens/weather_details_screen.dart';
+import '../providers/providers.dart';
+import '../providers/search_provider.dart';
 
 class AppRouter {
   static const String welcome = '/';
   static const String weather = '/weather';
+  static const String weatherDetails = '/weather-details';
 
   static final GoRouter router = GoRouter(
     initialLocation: welcome,
@@ -20,6 +24,27 @@ class AppRouter {
         path: weather,
         name: 'weather',
         builder: (context, state) => const WeatherScreen(),
+      ),
+      GoRoute(
+        path: weatherDetails,
+        name: 'weather-details',
+        builder: (context, state) {
+          final locationWithWeather = state.extra as LocationWithWeather?;
+
+          // If no location data is provided, redirect to weather screen
+          if (locationWithWeather == null) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              context.go(weather);
+            });
+            return const Scaffold(
+              body: Center(
+                child: CircularProgressIndicator(),
+              ),
+            );
+          }
+
+          return WeatherDetailsScreen(locationWithWeather: locationWithWeather);
+        },
       ),
     ],
     errorBuilder: (context, state) => Scaffold(

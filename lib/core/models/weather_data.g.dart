@@ -13,6 +13,9 @@ WeatherData _$WeatherDataFromJson(Map<String, dynamic> json) => WeatherData(
       weather: (json['weather'] as List<dynamic>)
           .map((e) => WeatherInfo.fromJson(e as Map<String, dynamic>))
           .toList(),
+      wind: json['wind'] == null
+          ? null
+          : WindData.fromJson(json['wind'] as Map<String, dynamic>),
       timestamp: (json['dt'] as num).toInt(),
     );
 
@@ -21,6 +24,7 @@ Map<String, dynamic> _$WeatherDataToJson(WeatherData instance) =>
       'location': instance.location,
       'main': instance.temperature,
       'weather': instance.weather,
+      'wind': instance.wind,
       'dt': instance.timestamp,
     };
 
@@ -53,4 +57,16 @@ Map<String, dynamic> _$WeatherInfoToJson(WeatherInfo instance) =>
       'main': instance.main,
       'description': instance.description,
       'icon': instance.icon,
+    };
+
+WindData _$WindDataFromJson(Map<String, dynamic> json) => WindData(
+      speed: (json['speed'] as num).toDouble(),
+      deg: (json['deg'] as num).toInt(),
+      gust: (json['gust'] as num?)?.toDouble(),
+    );
+
+Map<String, dynamic> _$WindDataToJson(WindData instance) => <String, dynamic>{
+      'speed': instance.speed,
+      'deg': instance.deg,
+      'gust': instance.gust,
     };

@@ -2,9 +2,7 @@ import 'package:celestia/core/design_system/app_colors.dart';
 import 'package:celestia/core/design_system/app_spacing.dart';
 import 'package:celestia/core/design_system/app_typography.dart';
 import 'package:celestia/core/providers/providers.dart';
-import 'package:celestia/core/services/saved_weather_service.dart';
-import 'package:celestia/core/api/weather_service.dart';
-import 'package:celestia/core/api/api_response.dart';
+import 'package:celestia/core/providers/saved_cities_provider.dart';
 import 'package:celestia/core/models/location.dart';
 import 'package:celestia/core/models/weather_data.dart';
 import 'package:celestia/gen/assets.gen.dart';
@@ -26,9 +24,6 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
   final FocusNode _searchFocusNode = FocusNode();
   bool _isSearchFocused = false;
   Timer? _debounceTimer;
-  Map<String, dynamic> _savedCities = {};
-  Map<String, WeatherData?> _savedCitiesWeather = {};
-  bool _isLoadingWeather = false;
 
   @override
   void initState() {
@@ -37,53 +32,6 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
       setState(() {
         _isSearchFocused = _searchFocusNode.hasFocus;
       });
-    });
-    _loadSavedCities();
-  }
-
-  Future<void> _loadSavedCities() async {
-    final savedCities = await SavedWeatherService.getSavedWeatherCities();
-    setState(() {
-      _savedCities = savedCities;
-      _isLoadingWeather = true;
-    });
-
-    // Fetch weather data for each saved city
-    await _fetchWeatherForSavedCities();
-  }
-
-  Future<void> _fetchWeatherForSavedCities() async {
-    final weatherData = <String, WeatherData?>{};
-
-    for (final entry in _savedCities.entries) {
-      final cityData = entry.value;
-      final location = Location(
-        name: cityData['name'] ?? '',
-        country: cityData['country'] ?? '',
-        lat: cityData['lat']?.toDouble() ?? 0.0,
-        lon: cityData['lon']?.toDouble() ?? 0.0,
-      );
-
-      try {
-        final response =
-            await WeatherService.instance.getCurrentWeatherByCoordinates(
-          lat: location.lat,
-          lon: location.lon,
-        );
-
-        if (response is ApiSuccess && response.data != null) {
-          weatherData[entry.key] = response.data;
-        } else {
-          weatherData[entry.key] = null;
-        }
-      } catch (e) {
-        weatherData[entry.key] = null;
-      }
-    }
-
-    setState(() {
-      _savedCitiesWeather = weatherData;
-      _isLoadingWeather = false;
     });
   }
 
@@ -491,8 +439,10 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
   }
 
   Widget _buildMainContent() {
+    final savedCitiesState = ref.watch(savedCitiesProvider);
+
     // Show saved cities if available
-    if (_savedCities.isNotEmpty) {
+    if (savedCitiesState.cities.isNotEmpty) {
       return _buildSavedCitiesList();
     }
 
@@ -575,6 +525,8 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
   }
 
   Widget _buildSavedCitiesList() {
+    final savedCitiesState = ref.watch(savedCitiesProvider);
+
     return ListView(
       padding: AppSpacing.paddingHorizontalLG,
       children: [
@@ -586,22 +538,23 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
           ),
         ),
         SizedBox(height: AppSpacing.lg),
-        if (_isLoadingWeather)
+        if (savedCitiesState.isLoading)
           ...List.generate(
               3,
               (index) => Container(
                     margin: EdgeInsets.only(bottom: AppSpacing.md),
-                    child: _buildLoadingCard(),
+                    child: _buildShimmerCard(),
                   ))
         else
-          ..._savedCities.entries.map((entry) {
+          ...savedCitiesState.cities.entries.map((entry) {
             final cityData = entry.value;
             final savedAt = cityData['savedAt'];
-            final weather = _savedCitiesWeather[entry.key];
+            final weather = savedCitiesState.weatherData[entry.key];
 
             return Container(
               margin: EdgeInsets.only(bottom: AppSpacing.md),
-              child: _buildSavedCityCard(cityData, savedAt, weather),
+              child: _buildDismissibleCityCard(
+                  entry.key, cityData, savedAt, weather),
             );
           }).toList(),
       ],
@@ -777,17 +730,136 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
     }
   }
 
-  Widget _buildLoadingCard() {
-    return Container(
-      height: 120,
-      margin: EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade200,
-        borderRadius: BorderRadius.circular(20),
+  Widget _buildDismissibleCityCard(String cityKey,
+      Map<String, dynamic> cityData, int savedAt, WeatherData? weather) {
+    return Dismissible(
+      key: Key(cityKey),
+      direction: DismissDirection.endToStart,
+      background: Container(
+        alignment: Alignment.centerRight,
+        padding: EdgeInsets.only(right: 20),
+        decoration: BoxDecoration(
+          color: Colors.red,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Icon(
+          Icons.delete,
+          color: Colors.white,
+          size: 30,
+        ),
       ),
-      child: Center(
-        child: CircularProgressIndicator(
-          valueColor: AlwaysStoppedAnimation<Color>(AppColors.primaryOrange),
+      confirmDismiss: (direction) async {
+        return await _showDeleteConfirmationDialog(cityData['name'] ?? 'City');
+      },
+      onDismissed: (direction) async {
+        await _deleteSavedCity(cityKey);
+      },
+      child: _buildSavedCityCard(cityData, savedAt, weather),
+    );
+  }
+
+  Future<bool> _showDeleteConfirmationDialog(String cityName) async {
+    return await showDialog<bool>(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Text('Delete City'),
+              content: Text(
+                  'Are you sure you want to delete $cityName from your saved cities?'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  style: TextButton.styleFrom(foregroundColor: Colors.red),
+                  child: Text('Delete'),
+                ),
+              ],
+            );
+          },
+        ) ??
+        false;
+  }
+
+  Future<void> _deleteSavedCity(String cityKey) async {
+    try {
+      await ref.read(savedCitiesProvider.notifier).removeSavedCity(cityKey);
+
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('City removed from saved cities'),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 2),
+        ),
+      );
+    } catch (e) {
+      // Show error message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to delete city'),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
+  Widget _buildShimmerCard() {
+    return Shimmer.fromColors(
+      baseColor: Colors.grey[300]!,
+      highlightColor: Colors.grey[100]!,
+      child: Container(
+        height: 140,
+        margin: EdgeInsets.only(bottom: 16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Padding(
+          padding: EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // Top row shimmer
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // City name shimmer
+                  Container(
+                    height: 20,
+                    width: 150,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                  // Temperature shimmer
+                  Container(
+                    height: 36,
+                    width: 60,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                ],
+              ),
+              // Bottom weather condition shimmer
+              Container(
+                height: 16,
+                width: 120,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

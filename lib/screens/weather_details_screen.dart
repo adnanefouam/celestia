@@ -8,6 +8,7 @@ import 'package:celestia/core/models/location.dart';
 import 'package:celestia/core/models/forecast_data.dart';
 import 'package:celestia/core/enums/weather_condition.dart';
 import 'package:celestia/core/providers/providers.dart';
+import 'package:celestia/core/providers/saved_cities_provider.dart';
 import 'package:celestia/core/api/weather_service.dart';
 import 'package:celestia/core/api/api_response.dart';
 import 'package:flutter/material.dart';
@@ -60,6 +61,14 @@ class _WeatherDetailsScreenState extends ConsumerState<WeatherDetailsScreen> {
       await SavedWeatherService.saveWeatherCity(
           widget.locationWithWeather.location);
     }
+
+    // Notify the saved cities provider to refresh
+    ref.read(savedCitiesProvider.notifier).addSavedCity({
+      'name': widget.locationWithWeather.location.name,
+      'country': widget.locationWithWeather.location.country,
+      'lat': widget.locationWithWeather.location.lat,
+      'lon': widget.locationWithWeather.location.lon,
+    });
 
     setState(() {
       _isCitySaved = !_isCitySaved;

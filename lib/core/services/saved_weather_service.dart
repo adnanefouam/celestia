@@ -39,6 +39,16 @@ class SavedWeatherService {
     await prefs.setString(_savedCitiesKey, jsonEncode(savedCities));
   }
 
+  // Remove a saved weather city by key
+  static Future<void> removeSavedWeatherCity(String cityKey) async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedCities = await getSavedWeatherCities();
+
+    savedCities.remove(cityKey);
+
+    await prefs.setString(_savedCitiesKey, jsonEncode(savedCities));
+  }
+
   // Get all saved weather cities
   static Future<Map<String, dynamic>> getSavedWeatherCities() async {
     final prefs = await SharedPreferences.getInstance();
